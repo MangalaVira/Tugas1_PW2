@@ -1,0 +1,82 @@
+<?php
+
+namespace App\Http\Controllers\API;
+
+use App\Http\Controllers\Controller;
+use App\Models\User;
+use Illuminate\Http\Request;
+use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Auth;
+
+class AuthController extends Controller
+{
+    // REGISTER
+    public function register(Request $request) 
+    {
+        $validate = $request->validate([
+            'name' => 'required',
+            'email' => 'required|email|unique:users', 
+            'password' => 'required',
+        ]);
+
+        $validate['password'] = bcrypt($request->password);
+
+        $user = User::create($validate);
+
+        if ($user) {
+            $data['success'] = true;
+            $data['message'] = 'User berhasil disimpan';
+            $data['data'] = $user->name; 
+            $data['token'] = $user->createToken('KeuanganPribadi')->plainTextToken;
+
+            return response()->json($data, Response::HTTP_CREATED); // 201
+        } else {
+            $data['success'] = false;
+            $data['message'] = 'User gagal disimpan';
+
+            return response()->json($data, Response::HTTP_BAD_REQUEST); // 400
+        }
+    }
+
+    // LOGIN
+    public function login(Request $request)
+    {
+        if (Auth::attempt([
+            'email' => $request->email,
+            'password' => $request->password
+        ])) {
+            $user = Auth::user();
+
+            $data['success'] = true;
+            $data['message'] = 'Login berhasil';
+            $data['token'] = $user->createToken('KeuanganPribadi')->plainTextToken;
+            $data['name'] = $user->name;
+
+            return response()->json($data, Response::HTTP_OK); // 200
+        } else {
+            $data['success'] = false;
+            $data['message'] = 'Email atau Password salah';
+
+            return response()->json($data, Response::HTTP_UNAUTHORIZED); // 401
+        }
+    }
+
+public function logout(Request $request)
+{
+    $user = $request->user();
+
+    if ($user && $user->currentAccessToken()) {
+        $user->currentAccessToken()->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Logout berhasil'
+        ], Response::HTTP_OK);
+    }
+
+    return response()->json([
+        'success' => false,
+        'message' => 'Token tidak valid atau user tidak terautentikasi'
+    ], Response::HTTP_UNAUTHORIZED);
+}
+}
