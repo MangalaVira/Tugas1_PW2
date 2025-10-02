@@ -60,23 +60,4 @@ class AuthController extends Controller
             return response()->json($data, Response::HTTP_UNAUTHORIZED); // 401
         }
     }
-
-public function logout(Request $request)
-{
-    $user = $request->user();
-
-    if ($user && $user->currentAccessToken()) {
-        $user->currentAccessToken()->delete();
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Logout berhasil'
-        ], Response::HTTP_OK);
-    }
-
-    return response()->json([
-        'success' => false,
-        'message' => 'Token tidak valid atau user tidak terautentikasi'
-    ], Response::HTTP_UNAUTHORIZED);
-}
 }

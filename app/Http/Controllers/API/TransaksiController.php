@@ -9,7 +9,7 @@ class TransaksiController extends Controller
 {
     public function index(Request $request)
     {
-        $transaksi = Transaksi::where('user_id', $request->user()->id)->get();
+        $transaksi = Transaksi::all();
         return response()->json($transaksi, 200);
     }
 
